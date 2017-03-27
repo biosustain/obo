@@ -162,9 +162,14 @@ class Term(Stanza):
         'creation_date',
     )
 
-    def __init__(self, id=None, **kwargs):
+    def __init__(self, id, **kwargs):
         super(Term, self).__init__('Term', id, **kwargs)
 
+    def __repr__(self):
+        if self.name:
+            return '<Term {} ! {}>'.format(self.id, self.name)
+        else:
+            return '<Term {}>'.format(self.id)
 
 class Typedef(Stanza):
     _tag_order = (
@@ -212,7 +217,7 @@ class Typedef(Stanza):
 
     is_metadata_tag = TagValueSetProperty('is_metadata_tag')
 
-    def __init__(self, id=None, **kwargs):
+    def __init__(self, id, **kwargs):
         super(Typedef, self).__init__('Typedef', id, **kwargs)
 
 

@@ -189,3 +189,17 @@ class Ontology(Object):
             return OBOReader().read(fp)
         else:
             raise NotImplementedError('Only the "obo" format is supported.')
+
+    # TODO replace terms with a better data structure for O(1) lookup
+    def term_by_id(self, id):
+        try:
+            return next(term for term in self.terms if term.id == id)
+        except StopIteration:
+            raise KeyError('No term with id: {}'.format(id))
+
+    # TODO replace terms with a better data structure for O(1) lookup
+    def term_by_name(self, name):
+        try:
+            return next(term for term in self.terms if term.name == name)
+        except StopIteration:
+            raise KeyError('No term with name: {}'.format(name))
