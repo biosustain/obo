@@ -157,9 +157,20 @@ class Ontology(Object):
     )
 
     format_version = TagValueProperty('format_version')
-    data_version = TagValueProperty('data_version')
 
-    # TODO ontology
+    data_version = TagValueProperty('data_version')
+    ontology = TagValueProperty('ontology')
+    date = TagValueProperty('date')
+    saved_by = TagValueProperty('saved-by')
+    auto_generated_by = TagValueProperty('auto-generated-by')
+
+    id_spaces = TagValueSetProperty('idspace')
+    default_relationship_id_prefix = TagValueProperty('default-relationship-id-prefix')
+    id_mappings = TagValueSetProperty('id-mapping')
+
+    remark = TagValueProperty('remark')
+
+    # TODO OBO 1.4 tags
 
     subsetdefs = TagValueSetProperty('subsetdef')
     synonymtypedefs = TagValueSetProperty('synonymtypedef')
