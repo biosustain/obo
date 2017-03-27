@@ -3,7 +3,7 @@ import re
 from collections import defaultdict
 
 from obo import Ontology, TermSubset, SynonymType, SynonymScope, Definition, XRef
-from obo.stanzas import Term, Instance, Stanza, Typedef
+from obo.stanzas import Term, Instance, Stanza, Typedef, Relationship
 
 
 class ParseException(Exception):
@@ -19,7 +19,7 @@ RE_NAME_DESCRIPTION_XREFS = re.compile(r'^(.+) "((?:[^"\\]|\\.)*)" \[(.+)\]"$')
 RE_DESCRIPTION_XREFS = re.compile(r'^"(?P<description>(?:[^"\\]|\\.)*)" \[(?P<xrefs>.+)\]$')
 RE_XREF_DEFINITION_ITEM = re.compile(r'^(?P<name>.+)( "(?P<description>(?:[^"\\]|\\.)*)")?')
 RE_XREF_DEFINITION_DIVIDER = re.compile(r'^,\s+')
-
+RE_RELATIONSHIP = re.compile('^(?P<type>.+) (?P<target_term>.+)$')
 
 RE_SYNONYM_TYPEDEF = re.compile(r'^(?P<name>.+) '
                                 r'"(?P<description>(?:[^"\\]|\\.)*)"'
@@ -28,6 +28,7 @@ RE_SYNONYM_TYPEDEF = re.compile(r'^(?P<name>.+) '
 BOOLEAN_TAG_NAMES = (
     'is_anonymous',
     'is_obsolete',
+    # TODO more tag names
 )
 
 
@@ -132,7 +133,7 @@ class OBOReader(object):
                 #    raise ParseException("Unterminated quote in tag-value pair", line, tag, value)
 
                 if tag is not None:
-                    value = part.lstrip()
+                    value = part.strip()
                 else:
                     raise ParseException('Tag without value', line)
 
@@ -140,6 +141,14 @@ class OBOReader(object):
                     if value not in ('true', 'false'):
                         raise ParseException('Tag must be one of "true", "false"', line)
                     value = value == 'true'
+                elif tag == 'relationship':
+                    match = RE_RELATIONSHIP.match(value)
+
+                    if match:
+                        value = Relationship(self._unescape(match.group('type')),
+                                             self._unescape(match.group('target_term')))
+                    else:
+                        raise ParseException("Malformatted 'relationship'", value)
                 elif tag == 'xref':
                     match = RE_XREF_DEFINITION.match(value)
 
@@ -149,14 +158,13 @@ class OBOReader(object):
                     else:
                         raise ParseException("Malformatted 'xref'", value)
                 elif tag == 'def':
-                    match = RE_DESCRIPTION_XREFS.match(value.rstrip())
+                    match = RE_DESCRIPTION_XREFS.match(value)
 
                     if match:
                         description = match.group('description')
                         xrefs_value = match.group('xrefs')
                         xrefs = []
 
-                        pos = 0
                         xref_match = RE_XREF_DEFINITION_ITEM.match(xrefs_value)
                         while xref_match:
                             pos = xref_match.endpos
@@ -170,10 +178,11 @@ class OBOReader(object):
                             if not comma_match:
                                 raise ParseException("Malformatted 'def'", value)
 
-                            pos = xref_match.endpos
+                            pos = comma_match.endpos
                             xref_match = RE_XREF_DEFINITION_ITEM.match(xrefs_value, pos)
 
                         value = Definition(description, *xrefs)
+
                     else:
                         raise ParseException("Malformatted 'def'", value)
 

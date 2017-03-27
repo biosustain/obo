@@ -8,13 +8,13 @@ class TagValueSetProperty(object):
         self.name = name
 
     def __get__(self, stanza, owner):
-        return stanza._tags[self.name]
+        return stanza.tags[self.name]
 
     def __set__(self, stanza, value):
         if isinstance(value, set):
-            stanza._tags[self.name] = value
+            stanza.tags[self.name] = value
         else:
-            stanza._tags[self.name] = set(value)
+            stanza.tags[self.name] = set(value)
 
 
 class TagValueProperty(object):
@@ -26,7 +26,7 @@ class TagValueProperty(object):
 
     def __get__(self, stanza, owner):
         try:
-            return stanza._tags[self.name][0]
+            return stanza.tags[self.name][0]
         except (KeyError, IndexError):
             return self.default
 
@@ -52,11 +52,11 @@ class ForbiddenTagProperty(object):
 
 
 class Object(object):
-    __slots__ = ('_tags',)
+    __slots__ = ('tags',)
     _tag_order = ()
 
     def __init__(self, **kwargs):
-        self._tags = tags = defaultdict(list)
+        self.tags = tags = defaultdict(list)
         for name, value in kwargs.items():
             if isinstance(value, (list, tuple, set)):
                 tags[name] = value
@@ -64,10 +64,10 @@ class Object(object):
                 tags[name].append(value)
 
     def add_tag(self, name, value):
-        if isinstance(self._tags[name], set):
-            self._tags[name].add(value)
+        if isinstance(self.tags[name], set):
+            self.tags[name].add(value)
         else:
-            self._tags[name].append(value)
+            self.tags[name].append(value)
 
     @staticmethod
     def _format_tag_group(name, values):
@@ -80,10 +80,10 @@ class Object(object):
         known_tags = ''
         unknown_tags = ''
         for name in self._tag_order:
-            if name in self._tags:
-                known_tags += self._format_tag_group(name, self._tags[name])
+            if name in self.tags:
+                known_tags += self._format_tag_group(name, self.tags[name])
             else:
-                unknown_tags += self._format_tag_group(name, self._tags[name])
+                unknown_tags += self._format_tag_group(name, self.tags[name])
         return known_tags + unknown_tags
 
 
@@ -104,7 +104,7 @@ class Stanza(Object):
     intersection_of = TagValueSetProperty('intersection_of')
     union_of = TagValueSetProperty('union_of')
     disjoint_from = TagValueSetProperty('disjoint_from')
-    relationship = TagValueSetProperty('relationship')
+    relationships = TagValueSetProperty('relationship')  # TODO relationship
     is_obsolete = TagValueProperty('is_obsolete', default=False)
     replaced_by = TagValueProperty('replaced_by')
     consider = TagValueProperty('consider')
@@ -128,6 +128,14 @@ class Stanza(Object):
             s = '[{}]\n'.format(self._stanza_name)
         s += Object.__str__(self)
         return s
+
+
+class Relationship(object):
+    __slots__ = ('type', 'target_term')
+
+    def __init__(self, type_, target_term):
+        self.type = type_
+        self.target_term = target_term
 
 
 class Term(Stanza):

@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from obo import Ontology, Definition
 from obo.reader import OBOReader
+from obo.stanzas import Relationship
 
 
 class OBOReaderTestCase(TestCase):
@@ -38,3 +39,13 @@ class SequenceOntologyTestCase(TestCase):
         for term in ontology.terms:
             if term.definition:
                 self.assertIsInstance(term.definition, Definition)
+
+            if term.relationships:
+                for relationship in term.relationships:
+                    self.assertIsInstance(relationship, Relationship)
+
+    def test_read_sequence_ontology_shortcut(self):
+        with open('files/so-xp.obo', 'r') as fp:
+            ontology = Ontology.read(fp)
+
+        self.assertIsInstance(ontology, Ontology)

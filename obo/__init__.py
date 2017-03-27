@@ -102,7 +102,7 @@ BUILT_IN_TYPEDEFS = (
 
 
 class TermSubset(object):
-    __slots = ('name', 'description')
+    __slots__ = ('name', 'description')
 
     def __init__(self, name, description):
         self.name = name
@@ -123,7 +123,7 @@ class SynonymScope(Enum):
 
 
 class SynonymType(object):
-    __slots = ('name', 'description', 'scope')
+    __slots__ = ('name', 'description', 'scope')
 
     def __init__(self, name, description, scope=None):
         self.name = name
@@ -159,6 +159,8 @@ class Ontology(Object):
     format_version = TagValueProperty('format_version')
     data_version = TagValueProperty('data_version')
 
+    # TODO ontology
+
     subsetdefs = TagValueSetProperty('subsetdef')
     synonymtypedefs = TagValueSetProperty('synonymtypedef')
 
@@ -168,3 +170,11 @@ class Ontology(Object):
         self.terms = set()
         self.instances = set()
         self.unrecognized_stanzas = []
+
+    @classmethod
+    def read(cls, fp, format='obo'):
+        if format == 'obo':
+            from obo.reader import OBOReader
+            return OBOReader().read(fp)
+        else:
+            raise NotImplementedError('Only the "obo" format is supported.')

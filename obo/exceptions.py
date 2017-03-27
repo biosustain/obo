@@ -1,8 +1,7 @@
 
 
 class OBOException(object):
-    def __init__(self):
-        pass
+    pass
 
 
 class OBOTagCardinalityException(OBOException):
@@ -21,7 +20,6 @@ class UnknownTermSubset(OBOException):
     """
     def __init__(self):
         pass
-
 
 
 class MissingRequiredTag(OBOException):
