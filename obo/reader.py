@@ -12,13 +12,13 @@ class ParseException(Exception):
 
 
 RE_STANZA = re.compile(r'^\[(?P<stanza>.+)\]$')
-RE_NAME_DESCRIPTION = re.compile(r'^(?P<name>.+) "(?P<description>(?:[^"\\]|\\.)*)"$')
-RE_XREF_DEFINITION = re.compile(r'^(?P<name>.+)( "(?P<description>(?:[^"\\]|\\.)*)")?$')
+RE_NAME_DESCRIPTION = re.compile(r'^(?P<name>[^ ]+) "(?P<description>(?:[^"\\]|\\.)*)"$')
+RE_XREF_DEFINITION = re.compile(r'^(?P<name>[^ ]+)( "(?P<description>(?:[^"\\]|\\.)*)")?$')
 RE_NAME_DESCRIPTION_MORE = re.compile(r'^(.+) "((?:[^"\\]|\\.)*)" (.+)"$')
 RE_NAME_DESCRIPTION_XREFS = re.compile(r'^(.+) "((?:[^"\\]|\\.)*)" \[(.+)\]"$')
 RE_DESCRIPTION_XREFS = re.compile(r'^"(?P<description>(?:[^"\\]|\\.)*)" \[(?P<xrefs>.+)\]$')
-RE_XREF_DEFINITION_ITEM = re.compile(r'^(?P<name>.+)( "(?P<description>(?:[^"\\]|\\.)*)")?')
-RE_XREF_DEFINITION_DIVIDER = re.compile(r'^,\s+')
+RE_XREF_DEFINITION_ITEM = re.compile(r'(?P<name>([^\\,]|\\\\|\\.)+)( "(?P<description>(?:[^"\\]|\\.)*)")?')
+RE_XREF_DEFINITION_DIVIDER = re.compile(r',\s*')
 RE_RELATIONSHIP = re.compile('^(?P<type>.+) (?P<target_term>.+)$')
 
 RE_SYNONYM_TYPEDEF = re.compile(r'^(?P<name>.+) '
@@ -99,16 +99,10 @@ class OBOReader(object):
                 while True:
                     for char in line:
                         if escape:
-                            # if char in 'ntW':
-                            #     part += {
-                            #         'n': '\n',
-                            #         't': '\t',
-                            #         'W': ' '
-                            #     }[char]
-                            # else:
-                            #     part += char
+                            part += char
                             escape = False
                         elif char == '\\':
+                            part += char
                             escape = True
                         elif not tag and char == ':':
                             tag = part
@@ -141,6 +135,19 @@ class OBOReader(object):
                     if value not in ('true', 'false'):
                         raise ParseException('Tag must be one of "true", "false"', line)
                     value = value == 'true'
+#
+
+                # if tag in ('union_of', 'disjoint_from'):
+                # target is tag id
+
+                elif tag == 'intersection_of':
+                    match = RE_RELATIONSHIP.match(value)
+
+                    if match:
+                        value = Relationship(self._unescape(match.group('type')),
+                                             self._unescape(match.group('target_term')))
+                    # else:
+                    #     pass  # target is tag id
                 elif tag == 'relationship':
                     match = RE_RELATIONSHIP.match(value)
 
@@ -167,7 +174,7 @@ class OBOReader(object):
 
                         xref_match = RE_XREF_DEFINITION_ITEM.match(xrefs_value)
                         while xref_match:
-                            pos = xref_match.endpos
+                            pos = xref_match.end(1)
                             xrefs.append(XRef(self._unescape(xref_match.group('name')),
                                               self._unescape(xref_match.group('description') or '') or None))
 
@@ -175,14 +182,14 @@ class OBOReader(object):
                                 break
 
                             comma_match = RE_XREF_DEFINITION_DIVIDER.match(xrefs_value, pos)
+
                             if not comma_match:
                                 raise ParseException("Malformatted 'def'", value)
 
-                            pos = comma_match.endpos
+                            pos = comma_match.end(0)
                             xref_match = RE_XREF_DEFINITION_ITEM.match(xrefs_value, pos)
 
                         value = Definition(description, *xrefs)
-
                     else:
                         raise ParseException("Malformatted 'def'", value)
 

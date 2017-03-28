@@ -2,7 +2,7 @@
 OBO
 ===
 
-**A Python package for parsing OBO files.**
+A Python package for OBO ontologies with a reader and writer for the OBO format.
 
 Motivation
 ----------
@@ -12,10 +12,7 @@ What would make this parser different from all the other parsers, is that it is 
 massive bioinformatics package and many dependencies, and that it will actually be submitted to PyPI (we can dream).
 
 This package is fairly complete in what it parses, while still being simple to use and written in Pythonic python. The
-parser currently ignores comments and trailing modifiers.
-
-What is still needed is an OBO Writer. So if you feel like coding one of those, write an issue and we will see if it can
-be done.
+parser currently ignores comments and trailing modifiers. There is also an experimental writer.
 
 
 Installation

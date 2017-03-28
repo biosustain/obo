@@ -1,7 +1,8 @@
 from collections import defaultdict
 from enum import Enum
 
-from obo.stanzas import Typedef, Object, TagValueProperty, TagValueSetProperty
+from obo.stanzas import Term, Typedef, Object, TagValueProperty, TagValueSetProperty
+from obo.util import StanzaSet
 
 __version__ = (1, 0, 0)
 
@@ -30,18 +31,13 @@ class XRef(object):
 
     @property
     def database(self):
-        return self.name.rsplit(':', 1)[0]
+        return self.name.split(':', 1)[0]
 
     @property
     def identifier(self):
         if ':' not in self.name:
             return None
-
-        id_ = self.name.rsplit(':', 1)[1]
-        try:
-            return int(id_)
-        except ValueError:
-            return id_
+        return self.name.split(':', 1)[1]
 
     def __repr__(self):
         return '{}({}, description={})'.format(self.__class__.__name__, repr(self.name), repr(self.description))
@@ -177,9 +173,9 @@ class Ontology(Object):
 
     def __init__(self, **kwargs):
         super(Ontology, self).__init__(**kwargs)
-        self.typedefs = set(BUILT_IN_TYPEDEFS)
-        self.terms = set()
-        self.instances = set()
+        self.typedefs = StanzaSet(BUILT_IN_TYPEDEFS)
+        self.terms = StanzaSet()
+        self.instances = StanzaSet()
         self.unrecognized_stanzas = []
 
     @classmethod
@@ -191,11 +187,9 @@ class Ontology(Object):
             raise NotImplementedError('Only the "obo" format is supported.')
 
     # TODO replace terms with a better data structure for O(1) lookup
-    def term_by_id(self, id):
-        try:
-            return next(term for term in self.terms if term.id == id)
-        except StopIteration:
-            raise KeyError('No term with id: {}'.format(id))
+    # deprecated
+    def term_by_id(self, id_):
+        return self.terms[id_]
 
     # TODO replace terms with a better data structure for O(1) lookup
     def term_by_name(self, name):

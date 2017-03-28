@@ -77,14 +77,14 @@ class Object(object):
         return s
 
     def __str__(self):
-        known_tags = ''
-        unknown_tags = ''
+        s = ''
         for name in self._tag_order:
             if name in self.tags:
-                known_tags += self._format_tag_group(name, self.tags[name])
-            else:
-                unknown_tags += self._format_tag_group(name, self.tags[name])
-        return known_tags + unknown_tags
+                s += self._format_tag_group(name, self.tags[name])
+        for name in sorted(self.tags):
+            if name not in self._tag_order:
+                s += self._format_tag_group(name, self.tags[name])
+        return s
 
 
 class Stanza(Object):
@@ -137,6 +137,8 @@ class Relationship(object):
         self.type = type_
         self.target_term = target_term
 
+    def __repr__(self):
+        return '<Relationship {} {}>'.format(self.type, self.target_term)
 
 class Term(Stanza):
     _tag_order = (
@@ -196,7 +198,7 @@ class Typedef(Stanza):
         'relationship',
         'is_obsolete',
         'replaced_by',
-        'consider',
+        'consider'
     )
 
     union_of = ForbiddenTagProperty('union_of')
